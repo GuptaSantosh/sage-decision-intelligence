@@ -12,7 +12,22 @@ The MVP is deliberately focused on one workflow:
 
 `Upload documents → Analyze initiative → Review executive dashboard → Inspect signals → Export decision output`
 
-## Local Setup
+## How Codex was used
+
+Codex was used as the primary engineering implementation partner for the project. It helped translate the product specification into a working Next.js application, including the upload workflow, document parsing, OpenAI API integration, structured-output validation, dashboard integration, error handling, session storage, and Vercel deployment fixes.
+
+## How GPT-5.6 was used
+
+GPT-5.6 powers the decision-analysis layer through the OpenAI Responses API. Extracted document text and business context are provided within a controlled prompt boundary. GPT-5.6 returns a structured executive assessment containing the recommendation, initiative health, business exposure, next actions, and evidence-backed Decision Signals.
+
+The response is constrained using Structured Outputs and validated at runtime before being displayed.
+## Local setup
+
+1. Clone the repository
+2. Run `npm install`
+3. Create `.env.local`
+4. Add `OPENAI_API_KEY=your_key`
+5. Run `npm run dev
 
 ### Prerequisites
 
