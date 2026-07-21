@@ -1,5 +1,4 @@
 import mammoth from "mammoth";
-import { PDFParse } from "pdf-parse";
 
 export const MAX_FILE_COUNT = 6;
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -34,6 +33,13 @@ export interface ParsedDocumentContext {
   documents: ParsedDocument[];
   context: string;
 }
+
+type PdfDependencies = {
+  PDFParse: typeof import("pdf-parse").PDFParse;
+  CanvasFactory: typeof import("pdf-parse/worker").CanvasFactory;
+};
+
+let pdfDependenciesPromise: Promise<PdfDependencies> | undefined;
 
 /**
  * Extracts server-side text only. OCR is intentionally out of scope: image-only PDFs
@@ -132,13 +138,33 @@ async function extractText(file: File, extension: string): Promise<string> {
     return result.value;
   }
 
-  const parser = new PDFParse({ data: buffer });
+  const { PDFParse, CanvasFactory } = await loadPdfDependencies();
+  const parser = new PDFParse({ data: buffer, CanvasFactory });
   try {
     const result = await parser.getText();
     return result.text;
   } finally {
     await parser.destroy();
   }
+}
+
+/**
+ * Keep PDF-only native and worker dependencies out of TXT, Markdown, and DOCX requests.
+ * pdf-parse v2's worker module provides both the serverless-safe worker source and canvas
+ * factory required by its PDF.js runtime.
+ */
+function loadPdfDependencies() {
+  pdfDependenciesPromise ??= Promise.all([import("pdf-parse"), import("pdf-parse/worker")]).then(
+    ([pdfModule, workerModule]) => {
+      pdfModule.PDFParse.setWorker(workerModule.getData());
+      return {
+        PDFParse: pdfModule.PDFParse,
+        CanvasFactory: workerModule.CanvasFactory,
+      };
+    },
+  );
+
+  return pdfDependenciesPromise;
 }
 
 function cleanExtractedText(text: string) {
