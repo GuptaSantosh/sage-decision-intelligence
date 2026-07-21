@@ -1,7 +1,8 @@
 "use client";
 
 import { FileText, UploadCloud, X } from "lucide-react";
-import { useDropzone } from "react-dropzone";
+import { useState } from "react";
+import { useDropzone, type FileRejection } from "react-dropzone";
 
 interface UploadZoneProps {
   files: File[];
@@ -15,11 +16,21 @@ const acceptedTypes = {
   "text/plain": [".txt"],
 };
 
+const MAX_FILES = 6;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export function UploadZone({ files, onFilesChange }: UploadZoneProps) {
+  const [rejectionMessage, setRejectionMessage] = useState<string | null>(null);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: acceptedTypes,
     multiple: true,
-    onDrop: (acceptedFiles) => onFilesChange([...files, ...acceptedFiles]),
+    maxFiles: MAX_FILES,
+    maxSize: MAX_FILE_SIZE_BYTES,
+    onDrop: (acceptedFiles) => {
+      setRejectionMessage(null);
+      onFilesChange([...files, ...acceptedFiles].slice(0, MAX_FILES));
+    },
+    onDropRejected: (rejections) => setRejectionMessage(getRejectionMessage(rejections)),
   });
 
   const removeFile = (index: number) => {
@@ -47,6 +58,8 @@ export function UploadZone({ files, onFilesChange }: UploadZoneProps) {
         <p className="mt-5 text-xs font-medium tracking-wide text-[#87978f]">PDF · DOCX · MARKDOWN · TEXT</p>
       </div>
 
+      {rejectionMessage && <p role="alert" className="mt-3 text-sm text-[#9a4534]">{rejectionMessage}</p>}
+
       {files.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2" aria-live="polite">
           {files.map((file, index) => (
@@ -67,4 +80,14 @@ export function UploadZone({ files, onFilesChange }: UploadZoneProps) {
       )}
     </div>
   );
+}
+
+function getRejectionMessage(rejections: FileRejection[]) {
+  if (rejections.some((rejection) => rejection.errors.some((error) => error.code === "file-too-large"))) {
+    return "Each document must be 10 MB or smaller.";
+  }
+  if (rejections.some((rejection) => rejection.errors.some((error) => error.code === "too-many-files"))) {
+    return "Upload no more than 6 documents at a time.";
+  }
+  return "Only PDF, DOCX, Markdown, and TXT documents are supported.";
 }

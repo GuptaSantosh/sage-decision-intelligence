@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/layout/BrandMark";
+import { isAnalysisResult } from "@/lib/analysis-validation";
+import { clearAnalysisFromSession, saveAnalysisToSession } from "@/lib/analysis-session";
+import { AnalysisProgress } from "./AnalysisProgress";
 import { FeatureCards } from "./FeatureCards";
 import { Footer } from "./Footer";
 import { Hero } from "./Hero";
@@ -9,7 +13,55 @@ import { ProjectForm } from "./ProjectForm";
 import { UploadZone } from "./UploadZone";
 
 export function LandingPage() {
+  const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
+  const [projectName, setProjectName] = useState("");
+  const [businessContext, setBusinessContext] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState<AnalysisError | null>(null);
+  const inFlightRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => abortControllerRef.current?.abort(), []);
+
+  const analyzeInitiative = async () => {
+    if (!files.length || inFlightRef.current) return;
+
+    setError(null);
+    clearAnalysisFromSession();
+    inFlightRef.current = true;
+    setIsAnalyzing(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const formData = new FormData();
+    formData.append("projectName", projectName.trim() || "Untitled initiative");
+    formData.append("businessContext", businessContext);
+    files.forEach((file) => formData.append("files", file));
+
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
+      const payload: unknown = await response.json().catch(() => null);
+
+      if (!response.ok || !isAnalysisResponse(payload)) {
+        setError(getError(payload));
+        return;
+      }
+
+      saveAnalysisToSession(payload);
+      router.push("/dashboard");
+    } catch (requestError) {
+      if (requestError instanceof DOMException && requestError.name === "AbortError") return;
+      setError({ message: "We could not reach the analysis service. Please check your connection and try again.", retryable: true });
+    } finally {
+      inFlightRef.current = false;
+      abortControllerRef.current = null;
+      setIsAnalyzing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f6f7f5] text-[#173d31]">
@@ -18,6 +70,10 @@ export function LandingPage() {
         <span className="hidden rounded-full border border-[#dce8e1] bg-white px-3 py-1.5 text-xs font-medium text-[#597166] sm:block">Enterprise decision validation</span>
       </header>
       <main>
+        {isAnalyzing ? (
+          <AnalysisProgress fileCount={files.length} />
+        ) : (
+          <>
         <Hero />
         <section className="mx-auto mt-8 max-w-4xl px-6 pb-12 sm:mt-10 sm:pb-16">
           <div className="rounded-2xl border border-[#d6e4dc] bg-white p-6 shadow-[0_18px_48px_rgba(25,65,49,0.1)] sm:p-10">
@@ -30,13 +86,52 @@ export function LandingPage() {
             </div>
             <div className="mt-6">
               <UploadZone files={files} onFilesChange={setFiles} />
-              <ProjectForm hasFiles={files.length > 0} />
+              <ProjectForm
+                hasFiles={files.length > 0}
+                projectName={projectName}
+                businessContext={businessContext}
+                isAnalyzing={isAnalyzing}
+                error={error}
+                onProjectNameChange={setProjectName}
+                onBusinessContextChange={setBusinessContext}
+                onAnalyze={analyzeInitiative}
+                onRetry={analyzeInitiative}
+              />
             </div>
           </div>
         </section>
         <FeatureCards />
+          </>
+        )}
       </main>
       <Footer />
     </div>
   );
+}
+
+function isAnalysisResponse(value: unknown) {
+  return isAnalysisResult(value);
+}
+
+interface AnalysisError {
+  message: string;
+  retryable: boolean;
+}
+
+function getError(payload: unknown): AnalysisError {
+  if (
+    typeof payload === "object" &&
+    payload !== null &&
+    "error" in payload &&
+    typeof payload.error === "object" &&
+    payload.error !== null &&
+    "message" in payload.error &&
+    typeof payload.error.message === "string" &&
+    "retryable" in payload.error &&
+    typeof payload.error.retryable === "boolean"
+  ) {
+    return { message: payload.error.message, retryable: payload.error.retryable };
+  }
+
+  return { message: "We could not prepare the executive assessment. Please try again.", retryable: true };
 }
