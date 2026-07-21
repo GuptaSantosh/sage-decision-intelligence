@@ -15,12 +15,12 @@ export function ExecutiveDecisionCard({ recommendation, detail }: ExecutiveDecis
         </div>
         <CircleCheckBig className="size-7 shrink-0 text-[#9ed0b6]" aria-hidden="true" />
       </div>
-      <div className="mt-7 border-y border-white/15 py-5">
+      <div className="mt-8 border-y border-white/15 py-6">
         <p className="text-[11px] font-semibold tracking-[0.14em] text-[#afd0c0]">RECOMMENDATION</p>
-        <p className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-white">{recommendation}</p>
+        <p className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-white">{recommendation}</p>
       </div>
-      <p className="mt-5 max-w-2xl text-sm leading-6 text-[#c7ddd2]">{detail}</p>
-      <a href="#next-actions" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#d8ebdf] transition hover:text-white">Review next actions <ArrowRight className="size-4" aria-hidden="true" /></a>
+      <p className="mt-6 max-w-2xl text-sm leading-6 text-[#d6e7de]">{detail}</p>
+      <a href="#next-actions" className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[#d8ebdf] transition hover:text-white">Review next actions <ArrowRight className="size-4" aria-hidden="true" /></a>
     </section>
   );
 }

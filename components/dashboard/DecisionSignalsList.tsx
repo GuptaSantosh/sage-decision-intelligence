@@ -13,7 +13,7 @@ export function DecisionSignalsList({ signals, onSelect }: { signals: DecisionSi
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#f2f6f3] text-xs font-semibold text-[#587469]">{signal.id}</span>
             <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-[#2d5144]">{signal.title}</span><span className="mt-1 hidden text-xs text-[#7b8c84] sm:block">{signal.exposure.join(" · ")}</span></span>
             <span className={`hidden rounded-full px-2 py-1 text-xs font-medium capitalize sm:block ${priorityStyles[signal.priority]}`}>{signal.priority}</span>
-            <span className="hidden text-xs text-[#779086] md:block">{signal.confidence}% confidence</span>
+            <span className="hidden rounded-full bg-[#edf5f0] px-2 py-1 text-xs text-[#557369] md:block"><strong className="font-semibold text-[#2d5b49]">{signal.confidence}%</strong> confidence</span>
             <ChevronRight className="size-4 shrink-0 text-[#91a299] transition group-hover:translate-x-0.5 group-hover:text-[#39765e]" aria-hidden="true" />
           </button>
         ))}

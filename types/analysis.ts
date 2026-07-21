@@ -21,11 +21,13 @@ export interface BusinessExposure {
 }
 
 export interface AnalysisResult {
+  source: "mock" | "live";
   projectName: string;
   analyzedAt: string;
   documentCount: number;
   healthScore: number;
   healthStatus: string;
+  assessmentConfidence: "High" | "Medium" | "Low";
   recommendation: string;
   recommendationDetail: string;
   summary: string[];

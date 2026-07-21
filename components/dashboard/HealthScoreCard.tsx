@@ -3,9 +3,10 @@ import { Activity } from "lucide-react";
 interface HealthScoreCardProps {
   score: number;
   status: string;
+  assessmentConfidence: "High" | "Medium" | "Low";
 }
 
-export function HealthScoreCard({ score, status }: HealthScoreCardProps) {
+export function HealthScoreCard({ score, status, assessmentConfidence }: HealthScoreCardProps) {
   return (
     <section className="rounded-2xl border border-[#dce7e1] bg-white p-6 shadow-[0_4px_16px_rgba(25,65,49,0.04)] sm:p-7">
       <div className="flex items-center justify-between">
@@ -20,6 +21,10 @@ export function HealthScoreCard({ score, status }: HealthScoreCardProps) {
         <div className="h-full rounded-full bg-[#4d9477]" style={{ width: `${score}%` }} />
       </div>
       <p className="mt-4 flex items-center gap-2 text-sm font-medium text-[#497063]"><span className="size-2 rounded-full bg-[#d89d3e]" />{status}</p>
+      <div className="mt-5 border-t border-[#edf2ef] pt-4">
+        <p className="text-[10px] font-semibold tracking-[0.12em] text-[#8a9c93]">ASSESSMENT CONFIDENCE</p>
+        <p className="mt-1 text-sm font-semibold text-[#416b5a]">{assessmentConfidence}</p>
+      </div>
     </section>
   );
 }

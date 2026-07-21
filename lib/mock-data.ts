@@ -1,11 +1,13 @@
 import type { AnalysisResult } from "@/types/analysis";
 
 export const mockAnalysis: AnalysisResult = {
+  source: "mock",
   projectName: "Digital Claims Transformation",
   analyzedAt: "21 July 2026",
   documentCount: 4,
   healthScore: 78,
   healthStatus: "Stable, needs attention",
+  assessmentConfidence: "High",
   recommendation: "Proceed with Conditions",
   recommendationDetail: "The initiative is directionally sound, but execution should begin only after the highest-priority governance and delivery gaps are addressed.",
   summary: [
